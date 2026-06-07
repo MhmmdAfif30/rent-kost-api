@@ -1,0 +1,7 @@
+.env
+node_modules
+.vscode
+request.http
+*.rest
+package-lock.json
+*.log
