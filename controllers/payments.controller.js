@@ -182,6 +182,17 @@ static async create(req, res) {
         }
     }
 
+  static async syncPaymentStatus(req, res) {
+    try {
+        const { orderId } = req.params;
+        const userId = req.user?.id || null; // Ambil dari auth middleware
+        const result = await PaymentsService.syncPaymentStatusFromMidtrans(orderId, userId);
+        return res.status(200).json(setResponse(result, 'Payment status synced with Midtrans'));
+    } catch (error) {
+        return res.status(error.statusCode || 500).json(setResponse([], error.message, error.statusCode || 500));
+    }
+}
+
     // Export payments to Excel
     static async exportExcel(req, res) {
         try {

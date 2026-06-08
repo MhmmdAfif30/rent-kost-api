@@ -20,4 +20,12 @@ router.route('/:id/approve')
 router.route('/:id/reject')
     .put(verifyToken.verifyAccessToken, verifyAccess(), PaymentsController.reject);
 
+router.route('/status/:orderId')
+    .get(verifyToken.verifyAccessToken, PaymentsController.getTransactionStatus);
+
+router.route('/sync/:orderId')
+    .post(verifyToken.verifyAccessToken, PaymentsController.syncPaymentStatus);
+
+
+
 module.exports = router;

@@ -165,23 +165,19 @@ class PaymentsService {
         }
     }
 
-    static async handleMidtransNotification(notificationData) {
+
+    static async syncPaymentStatusFromMidtrans(orderId) {
         try {
-            if (!notificationData || !notificationData.order_id) {
-                throw new ErrorHandler(400, 'Invalid notification data');
+            if (!orderId) {
+                throw new ErrorHandler(400, 'Order ID is required');
             }
 
-            const statusResponse = await midtransHelper.handleNotification(notificationData);
-            const orderId = statusResponse.order_id;
-            const transactionStatus = statusResponse.transaction_status;
-            const fraudStatus = statusResponse.fraud_status;
-
-            const payment = await getPaymentsByOrderIdDb(orderId);
-            if (!payment) {
-                throw new ErrorHandler(404, 'Payment not found for order: ' + orderId);
-            }
+            const midtransStatus = await midtransHelper.getTransactionStatus(orderId);
 
             let paymentStatus = 'pending';
+            const transactionStatus = midtransStatus.transaction_status;
+            const fraudStatus = midtransStatus.fraud_status;
+
             switch (transactionStatus) {
                 case 'capture':
                     paymentStatus = fraudStatus === 'accept' ? 'success' : 'pending';
@@ -190,10 +186,13 @@ class PaymentsService {
                     paymentStatus = 'success';
                     break;
                 case 'deny':
-                case 'cancel':
-                case 'expire':
-
                     paymentStatus = 'failed';
+                    break;
+                case 'cancel':
+                    paymentStatus = 'failed';
+                    break;
+                case 'expire':
+                    paymentStatus = 'expired';
                     break;
                 default:
                     paymentStatus = 'pending';
@@ -201,18 +200,31 @@ class PaymentsService {
 
             const updateData = {
                 payment_status: paymentStatus,
-                midtrans_response: statusResponse
+                is_approve: true,
+                approved_by: approvedBy
             };
 
             if (paymentStatus === 'success') {
-                updateData.payment_date = formattedStartTime
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                updateData.payment_date = `${year}-${month}-${day} ${hours}:${minutes}:${seconds} +0700`;
             }
 
             await updatePaymentStatusDb(orderId, updateData);
 
-            return { orderId, paymentStatus, transactionStatus, fraudStatus };
+            return {
+                order_id: orderId,
+                previous_status: 'pending',
+                current_status: paymentStatus,
+                midtrans_status: transactionStatus,
+                fraud_status: fraudStatus
+            };
         } catch (error) {
-            console.error('Midtrans Notification Error:', error);
             throw new ErrorHandler(error.statusCode || 500, error.message);
         }
     }
@@ -229,35 +241,35 @@ class PaymentsService {
         }
     }
 
-   static async approvePayments(paymentsId, approverId) {
-    try {
-        if (!paymentsId) {
-            throw new ErrorHandler(400, 'Payments ID is required');
-        }
-        
-        // if (!approverId) {  // Add this validation
-        //     throw new ErrorHandler(400, 'Approver ID is required');
-        // }
+    static async approvePayments(paymentsId, approverId) {
+        try {
+            if (!paymentsId) {
+                throw new ErrorHandler(400, 'Payments ID is required');
+            }
 
-        const existingPayments = await getPaymentsByIdDb(paymentsId);
-        if (!existingPayments) {
-            throw new ErrorHandler(404, 'Payments not found');
-        }
+            // if (!approverId) {  // Add this validation
+            //     throw new ErrorHandler(400, 'Approver ID is required');
+            // }
 
-        if (existingPayments.is_approve === 2) {
-            throw new ErrorHandler(400, 'Payments is already approved');
-        }
+            const existingPayments = await getPaymentsByIdDb(paymentsId);
+            if (!existingPayments) {
+                throw new ErrorHandler(404, 'Payments not found');
+            }
 
-        if (existingPayments.is_approve === 1) {
-            throw new ErrorHandler(400, 'Payments is already rejected');
-        }
+            if (existingPayments.is_approve === 2) {
+                throw new ErrorHandler(400, 'Payments is already approved');
+            }
 
-        const updatedPayment = await approvePaymentsDb(paymentsId, approverId);
-        return updatedPayment;
-    } catch (error) {
-        throw new ErrorHandler(error.statusCode || 500, error.message);
+            if (existingPayments.is_approve === 1) {
+                throw new ErrorHandler(400, 'Payments is already rejected');
+            }
+
+            const updatedPayment = await approvePaymentsDb(paymentsId, approverId);
+            return updatedPayment;
+        } catch (error) {
+            throw new ErrorHandler(error.statusCode || 500, error.message);
+        }
     }
-}
 
     static async rejectPayments(paymentsId, approverId) {
         try {
