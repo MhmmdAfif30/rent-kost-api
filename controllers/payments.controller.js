@@ -171,7 +171,6 @@ static async create(req, res) {
         }
     }
 
-    // Get transaction status from Midtrans
     static async getTransactionStatus(req, res) {
         try {
             const { orderId } = req.params;

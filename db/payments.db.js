@@ -32,11 +32,6 @@ const getAllPaymentsDb = async (searchParams = {}) => {
 
     FROM payments a
 
-      ${whereConditions.length > 0 ? ` AND ${whereConditions.join(" AND ")}` : ""}
-      ${whereOrConditions ? ` ${whereOrConditions}` : ""}
-
-    ORDER BY a.payments_id ASC
-    ${searchParams.limit ? `OFFSET $2 * $1 ROWS FETCH NEXT $1 ROWS ONLY` : ''}
   `;
 
   const result = await pool.query(queryText, queryParams);
@@ -83,12 +78,14 @@ const updatePaymentsDb = async (id, data) => {
   return getPaymentsByIdDb(id);
 };
 
-const deletePaymentsDb = async (id, deletedBy) => {
+const deletePaymentsDb = async (id) => {
   const queryText = `
-    UPDATE payments
-    WHERE payments_id = $2 
+    DELETE 
+    FROM payments
+    
+    WHERE payments_id = $1;
   `;
-  await pool.query(queryText, [deletedBy, id]);
+  await pool.query(queryText, [id]);
   return true;
 };
 

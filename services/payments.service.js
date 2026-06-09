@@ -114,7 +114,7 @@ class PaymentsService {
                 photo: data.photo || null,
                 is_approve: 0,
                 is_active: 1,
-                approve_by: 0,
+                // approve_by: 0,
                 order_id: data.order_id,
                 gross_amount: grossAmount,
                 midtrans_token: midtransTransaction.token,
@@ -201,7 +201,7 @@ class PaymentsService {
             const updateData = {
                 payment_status: paymentStatus,
                 is_approve: true,
-                approved_by: approvedBy
+                // approved_by: approvedBy
             };
 
             if (paymentStatus === 'success') {
