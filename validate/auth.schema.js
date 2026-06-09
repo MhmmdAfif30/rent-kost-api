@@ -4,7 +4,7 @@ const registerSchema = Joi.object({
   fullname: Joi.string().min(3).max(100).required(),
   username: Joi.string().alphanum().min(3).max(50).required(),
   email: Joi.string().email().required(),
-  address: Joi.string().strict(255).optional().allow(null),
+  address: Joi.string().string(255).optional().allow(null),
   contact_phone: Joi.string()
     .pattern(/^(?:\+62|0)8\d{7,12}$/)
     .required()
