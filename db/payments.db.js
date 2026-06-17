@@ -3,26 +3,26 @@ const pool = require("../config");
 const getAllPaymentsDb = async (searchParams = {}) => {
   let queryParams = [];
 
-  //  Pagination
-  // if (searchParams.limit) {
-  //     const page = Number(searchParams.page ?? 1) - 1;
-  //     queryParams = [Number(searchParams.limit ?? 10), page];
-  // }
+  if (searchParams.limit) {
+      const page = Number(searchParams.page ?? 1) - 1;
+      queryParams = [Number(searchParams.limit ?? 10), page];
+  }
 
-  // const { whereOrConditions, whereParamOr } = pool.buildStringOrIlike(
-  //     ["a.role_name"],
-  //     searchParams.criteria,
-  //     queryParams
-  // );
-  // if (whereParamOr) queryParams = whereParamOr;
+  const { whereOrConditions, whereParamOr } = pool.buildStringOrIlike(
+      ["a.order_id", "a.type_payment" ],
+      searchParams.criteria,
+      queryParams
+  );
+  if (whereParamOr) queryParams = whereParamOr;
 
-  // const { whereConditions, whereParamAnd } = pool.buildFilterQuery(
-  //     [
-  //         { column: "a.role_name", param: searchParams.role_name, type: "string" },
-  //     ],
-  //     queryParams
-  // );
-  // if (whereParamAnd) queryParams = whereParamAnd;
+  const { whereConditions, whereParamAnd } = pool.buildFilterQuery(
+      [
+          { column: "a.order_id", param: searchParams.order_id, type: "string" },
+          { column: "a.type_payment", param: searchParams.type_payment, type: "string" },
+      ],
+      queryParams
+  );
+  if (whereParamAnd) queryParams = whereParamAnd;
 
   const queryText = `
 

@@ -5,32 +5,29 @@ const getAllInvoicesDb = async (searchParams = {}) => {
     let queryParams = [];
 
     // Search
-    /*
     const { whereOrConditions, whereParamOr } = pool.buildStringOrIlike(
-        ["u.fullname", "u.username", "u.email", "ur.role_name"],
+        ["c.fullname", "c.username", "c.email"],
         searchParams.criteria,
         queryParams
     );
-    queryParams = whereParamOr ? whereParamOr : queryParams;
+    queryParams = whereParamOr || queryParams;
 
     // Filter
     const { whereConditions, whereParamAnd } = pool.buildFilterQuery(
         [
-            { column: "u.fullname", param: searchParams.fullname, type: "string" },
-            { column: "u.username", param: searchParams.username, type: "string" },
-            { column: "u.email", param: searchParams.email, type: "string" },
-            { column: "ur.role_name", param: searchParams.role, type: "string" },
+            { column: "c.fullname", param: searchParams.fullname, type: "string" },
+            { column: "c.username", param: searchParams.username, type: "string" },
+            { column: "c.email", param: searchParams.email, type: "string" },
         ],
         queryParams
     );
-    queryParams = whereParamAnd ? whereParamAnd : queryParams;
-    */
+    queryParams = whereParamAnd || queryParams;
 
     const conditions = [];
-    if (typeof whereConditions !== 'undefined' && whereConditions.length > 0) {
+    if (whereConditions && whereConditions.length > 0) {
         conditions.push(`(${whereConditions.join(' AND ')})`);
     }
-    if (typeof whereOrConditions !== 'undefined' && whereOrConditions) {
+    if (whereOrConditions) {
         conditions.push(whereOrConditions.replace(/^\s*AND\s*/i, ''));
     }
 
@@ -38,33 +35,33 @@ const getAllInvoicesDb = async (searchParams = {}) => {
 
     let paginationClause = '';
     if (searchParams.limit) {
-        const limitValue = Number(searchParams.limit ?? 10);
-        const page = Number(searchParams.page ?? 1) - 1;
+        const limitValue = Number(searchParams.limit) || 10;
+        const page = Math.max(0, Number(searchParams.page) - 1) || 0;
         const offsetValue = page * limitValue;
 
         paginationClause = `LIMIT ${limitValue} OFFSET ${offsetValue}`;
     }
 
     const queryText = `
-
-    SELECT 
-      COUNT(*) OVER() AS total_data,
-
-    FROM invoices  a
-
-    ${whereClause}
-    ORDER BY a.invoices_id ASC
-    ${paginationClause}
-  `;
+        SELECT 
+            COUNT(*) OVER() AS total_data, 
+            a.*
+        FROM invoices a
+        ${whereClause}
+        ORDER BY a.invoices_id DESC
+        ${paginationClause}
+    `;
 
     const result = await pool.query(queryText, queryParams);
 
-    const total =
-        result?.recordset && result.recordset.length > 0
-            ? parseInt(result.recordset[0].total_data, 10)
-            : 0;
+    const total = result?.recordset?.length > 0 
+        ? parseInt(result.recordset[0].total_data, 10) 
+        : 0;
 
-    return { data: result.recordset, total };
+    return { 
+        data: result?.recordset || [], 
+        total 
+    };
 };
 
 // Get invoice by ID
@@ -79,17 +76,13 @@ const getInvoicesByIdDb = async (id) => {
      a.fee, 
      a.total, 
      a.is_active,
-     c.start_date, 
-     c.end_date, 
-     d.fullname as customer_name, 
-     d.email as customer_email, 
-     d.contact_phone as customer_phone
+     b.fullname as customer_name, 
+     b.email as customer_email, 
+     b.contact_phone as customer_phone
 
     FROM invoices  a
 
-    LEFT JOIN contracts c ON a.contracts_id = c.contracts_id
-
-    LEFT JOIN users d ON c.users_id = d.users_id
+    LEFT JOIN users b ON a.users_id = b.users_id
 
     WHERE a.invoices_id = $1
   `;

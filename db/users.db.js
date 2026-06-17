@@ -5,7 +5,6 @@ const getAllUsersDb = async (searchParams = {}) => {
   let queryParams = [];
 
   // Search
-  /*
   const { whereOrConditions, whereParamOr } = pool.buildStringOrIlike(
       ["u.fullname", "u.username", "u.email", "ur.role_name"],
       searchParams.criteria,
@@ -24,7 +23,6 @@ const getAllUsersDb = async (searchParams = {}) => {
       queryParams
   );
   queryParams = whereParamAnd ? whereParamAnd : queryParams;
-  */
 
   const conditions = [];
   if (typeof whereConditions !== 'undefined' && whereConditions.length > 0) {

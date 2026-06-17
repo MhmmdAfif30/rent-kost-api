@@ -8,8 +8,8 @@ class InvoicesController {
   static async getAll(req, res) {
     const queryParams = req.query;
 
-    const results = await InvoicesService.getAllUsers(queryParams);
-    const response = await setResponsePaging(queryParams, results, 'Users found');
+    const results = await InvoicesService.getAllInvoices(queryParams);
+    const response = await setResponsePaging(queryParams, results, 'Invoice found');
 
     res.status(response.statusCode).json(response);
   }
@@ -18,8 +18,8 @@ class InvoicesController {
   static async getById(req, res) {
     const { id } = req.params;
 
-    const results = await InvoicesService.getUserById(id);
-    const response = await setResponse(results, 'Users found');
+    const results = await InvoicesService.getInvoicesById(id);
+    const response = await setResponse(results, 'Invoice found');
 
     res.status(response.statusCode).json(response);
   }
@@ -51,7 +51,7 @@ class InvoicesController {
     value.userId = req.user.users_id;
 
     const results = await InvoicesService.updateInvoices(id, value);
-    const response = await setResponse(results, 'Users updated successfully');
+    const response = await setResponse(results, 'Invoice updated successfully');
 
     res.status(response.statusCode).json(response);
   }
@@ -62,7 +62,7 @@ class InvoicesController {
     const { id } = req.params;
 
     const results = await InvoicesService.deleteInvoices(id, req.users.users_id);
-    const response = await setResponse(results, 'Users deleted successfully');
+    const response = await setResponse(results, 'Invoice deleted successfully');
 
     res.status(response.statusCode).json(response);
   }
