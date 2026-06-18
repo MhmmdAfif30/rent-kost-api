@@ -53,8 +53,8 @@ class PaymentsController {
 
     // Create payments with Midtrans
 static async create(req, res) {
+
     try {
-        // Set timeout untuk entire request - lebih panjang
         req.setTimeout(180000, () => {
             return res.status(504).json(setResponse([], "Request timeout", 504));
         });
@@ -62,24 +62,6 @@ static async create(req, res) {
         const { error, value } = await checkValidate(insertPaymentsSchema, req);
         if (error) {
             return res.status(400).json(setResponse(error, "Validation failed", 400));
-        }
-
-        if (req.file) {
-            try {
-                const uploadTimeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error('Image upload timeout')), 15000);
-                });
-                const uploadPromise = imagekit.upload({
-                    file: req.file.buffer,
-                    fileName: req.file.originalname,
-                    folder: "/payments",
-                });
-                const upload = await Promise.race([uploadPromise, uploadTimeout]);
-                value.photo = upload.url;
-            } catch (uploadError) {
-                console.warn('Image upload failed, continuing without photo:', uploadError.message);
-                value.photo = null;
-            }
         }
 
         value.order_id = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -111,7 +93,7 @@ static async create(req, res) {
                 redirect_url: results.midtrans.redirect_url
             },
             processing_time_ms: duration
-        }, "Payments created successfully. Redirect to payment page."));
+        }, "Payments created successfully"));
         
     } catch (err) {
         console.error('Create payment error:', err);

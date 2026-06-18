@@ -4,7 +4,6 @@ const Joi = require("joi");
 const insertPaymentsSchema = Joi.object({
     invoices_id: Joi.number().integer().min(1).required(),
     type_payment: Joi.string().max(255).valid('virtual_account', 'midtrans').required(),
-    photo: Joi.string().optional().allow(""),
     is_approve: Joi.boolean().optional().allow(""),
     is_active: Joi.boolean().default(true)
 });
@@ -13,7 +12,6 @@ const insertPaymentsSchema = Joi.object({
 const updatePaymentsSchema = Joi.object({
     invoices_id: Joi.number().integer().min(1).optional(),
     type_payment: Joi.string().max(255).valid('virtual_account', 'midtrans').optional(),
-    photo: Joi.string().max(255).optional().allow(""),
     is_approve: Joi.boolean().optional(),
     is_active: Joi.boolean().optional()
 });
