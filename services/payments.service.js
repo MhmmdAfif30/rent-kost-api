@@ -111,7 +111,6 @@ class PaymentsService {
             const dataToSave = {
                 invoices_id: data.invoices_id,
                 type_payment: data.type_payment || 'midtrans',
-                photo: data.photo || null,
                 is_approve: 0,
                 is_active: 1,
                 // approve_by: 0,

@@ -124,15 +124,6 @@ static async create(req, res) {
                 return res.status(400).json(setResponse(error, "Validation failed", 400));
             }
 
-            if (req.file) {
-                const upload = await imagekit.upload({
-                    file: req.file.buffer,
-                    fileName: req.file.originalname,
-                    folder: "/payments",
-                });
-                value.photo = upload.url;
-            }
-
             value.userId = req.user.users_id;
 
             const results = await PaymentsService.updatePayments(id, value);
